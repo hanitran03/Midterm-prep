@@ -10,3 +10,100 @@ Quarto enables you to weave together content and executable code into a finished
 ## Running Code
 
 ![](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS2513843X24000355/resource/name/S2513843X24000355_figAb.png?pub-status=live)
+
+```{r}
+#classification
+set.seed(8740)
+
+# create test/train splits
+splits <- rsample::initial_split(spam_data)
+train <- rsample::training(splits)
+test <- rsample::testing(splits)
+
+default_recipe <- train %>%
+  recipes::recipe(formula = type ~ .)
+  
+default_model <- parsnip::logistic_reg(penalty = 0.05, mixture = 0.5) %>%
+  parsnip::set_engine("glmnet") %>%
+  parsnip::set_mode("classification")
+
+default_workflow <- workflows::workflow() %>%
+  workflows::add_recipe(default_recipe) %>%
+  workflows::add_model(default_model)
+  
+lm_fit <- default_workflow %>%
+  parsnip::fit(train)
+
+testing_results <- broom::augment(lm_fit , test)
+
+# ROC_AUC PLOT
+testing_results %>% 
+    yardstick::roc_curve(
+    truth = type
+    , .pred_spam
+    ) %>%
+  ggplot2::autoplot() +
+  ggplot2::theme_bw(base_size = 18)
+
+# CALCULATION OF ACCURACY
+testing_results %>%
+    yardstick::roc_auc(
+    truth = type
+    , .pred_spam
+    )
+
+# CALCULATION OF ACCURACY
+testing_results %>%
+    yardstick::roc_auc(
+    truth = type
+    , .pred_spam
+    )
+
+ #tune the meta parameters of the logistic model
+```
+
+```{r}
+#DAG
+{r}
+# extract the coefficients for each regression
+tibble::tibble(
+  model = c('lin_YX','lin_YV','lin_YW')
+  , m = list(lin_YX,lin_YV,lin_YW )
+) %>%
+  dplyr::mutate(
+    D_coefficient =
+      purrr::map_dbl(
+        m
+        , function(s){
+          s %>% broom::tidy() %>%
+            dplyr::filter(term == "D") %>%
+            dplyr::pull(estimate)
+        }
+      )
+  )
+
+# specify the DAG for this question, based on the data generation mechanism
+Q10dag <- ggdag::dagify(
+  W ~ V
+  , D ~ V
+  , Y ~ D + W
+  , Z ~ D + Y
+  , exposure = "D"
+  , outcome = "Y"
+)
+
+# Plot the DAG
+Q10dag %>% ggdag::ggdag(use_text = TRUE, layout = "time_ordered") +
+  ggdag::theme_dag()
+
+{r}
+Q10dag %>% ggdag::ggdag_adjustment_set(use_text = TRUE) +
+  ggdag::theme_dag()
+
+{r}
+lm(Y ~ D + I(W^2), data=data_obs)
+```
+
+Here both variables V and W will block the open backdoor path from D -\> Y. Note that the Dag doesn't capture the quadratic relationship of W to Y, just that Y depends on W. The quadratic relationship is why lin_YW doesn't product a great estimate.
+
+In practice you would note the difference between lin_YV and lin_YW and experiment with different regression specifications, e.g..
