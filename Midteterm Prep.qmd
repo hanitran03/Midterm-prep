@@ -1,0 +1,12 @@
+---
+title: "Midterm Prep"
+format: html
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+![](https://static.cambridge.org/content/id/urn%3Acambridge.org%3Aid%3Aarticle%3AS2513843X24000355/resource/name/S2513843X24000355_figAb.png?pub-status=live)
